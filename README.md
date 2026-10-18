@@ -62,59 +62,66 @@ These 9 images must be mirrored to your internal registry. Full details with dig
 
 ## Phase 0: Mirror Images
 
-> Run on a **connected** machine. Then transfer images to disconnected registry.
+> Run on a **connected** machine that can reach both the public registries and your internal mirror.
 
-**Script path:**
+**Option A: podman pull + push (recommended for most customers):**
+```bash
+export MIRROR_REGISTRY=registry.example.com:5000
+
+# If your mirror needs auth:
+podman login $MIRROR_REGISTRY
+
+# If pulling Red Hat images:
+podman login registry.redhat.io
+
+# Pull all images, tag for your mirror, and push:
+./scripts/03-podman-mirror-images.sh
+```
+
+**Option B: skopeo (direct server-to-server copy, no local storage needed):**
 ```bash
 export MIRROR_REGISTRY=registry.example.com:5000
 ./scripts/01-mirror-images.sh
 ```
 
-**Manual steps (if the script does not work):**
+**Option C: Manual podman commands (if scripts don't work):**
 
 ```bash
-# Set your mirror registry
 export MIRROR=registry.example.com:5000
 
-# Pull each image
-podman pull ghcr.io/nvidia/openshell/gateway:0.1.3
-podman pull ghcr.io/nvidia/openshell/supervisor:0.1.3
-podman pull ghcr.io/nvidia/openshell/sandbox:0.1.3
-podman pull nvcr.io/nvidia/base/ubuntu:24.04
-podman pull quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441
-podman pull quay.io/gkrumbach07/openshell-dashboard:0.1.1
-podman pull quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
-podman pull registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
-podman pull registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3
-
-# Tag and push each to your mirror
-podman tag ghcr.io/nvidia/openshell/gateway:0.1.3 $MIRROR/nvidia/openshell/gateway:0.1.3
+# For EACH image: pull by digest, tag for your mirror, push
+podman pull ghcr.io/nvidia/openshell/gateway@sha256:7fb31ce604ce5fef58f481fda815f7ed710a9ca18d1262b700bd63114607fb60
+podman tag ghcr.io/nvidia/openshell/gateway@sha256:7fb31ce604ce5fef58f481fda815f7ed710a9ca18d1262b700bd63114607fb60 $MIRROR/nvidia/openshell/gateway:0.1.3
 podman push $MIRROR/nvidia/openshell/gateway:0.1.3
 
-podman tag ghcr.io/nvidia/openshell/supervisor:0.1.3 $MIRROR/nvidia/openshell/supervisor:0.1.3
+podman pull ghcr.io/nvidia/openshell/supervisor@sha256:1da55431d1b36e71ac881a93edd5b6743d179faf9b008a31963d2c3db50637a9
+podman tag ghcr.io/nvidia/openshell/supervisor@sha256:1da55431d1b36e71ac881a93edd5b6743d179faf9b008a31963d2c3db50637a9 $MIRROR/nvidia/openshell/supervisor:0.1.3
 podman push $MIRROR/nvidia/openshell/supervisor:0.1.3
 
-podman tag ghcr.io/nvidia/openshell/sandbox:0.1.3 $MIRROR/nvidia/openshell/sandbox:0.1.3
+podman pull ghcr.io/nvidia/openshell/sandbox@sha256:2658534bfb3f1ebba4bb7792e9e875a0972edbe7ae5f58d807ae22c46844a2ac
+podman tag ghcr.io/nvidia/openshell/sandbox@sha256:2658534bfb3f1ebba4bb7792e9e875a0972edbe7ae5f58d807ae22c46844a2ac $MIRROR/nvidia/openshell/sandbox:0.1.3
 podman push $MIRROR/nvidia/openshell/sandbox:0.1.3
 
-podman tag nvcr.io/nvidia/base/ubuntu:24.04 $MIRROR/nvidia/base/ubuntu:24.04
+podman pull nvcr.io/nvidia/base/ubuntu@sha256:fdfe3e69644d4c52ccdf2195413d1037e17b0b2bc8ff000806c548cafdc686b6
+podman tag nvcr.io/nvidia/base/ubuntu@sha256:fdfe3e69644d4c52ccdf2195413d1037e17b0b2bc8ff000806c548cafdc686b6 $MIRROR/nvidia/base/ubuntu:24.04
 podman push $MIRROR/nvidia/base/ubuntu:24.04
 
-podman tag quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441 $MIRROR/opendatahub/odh-openshell-sandbox-openclaw:latest
-podman push $MIRROR/opendatahub/odh-openshell-sandbox-openclaw:latest
+podman pull quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441
+podman tag quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441 $MIRROR/opendatahub/odh-openshell-sandbox-openclaw:2026.9.5
+podman push $MIRROR/opendatahub/odh-openshell-sandbox-openclaw:2026.9.5
 
-podman tag quay.io/gkrumbach07/openshell-dashboard:0.1.1 $MIRROR/gkrumbach07/openshell-dashboard:0.1.1
+podman pull quay.io/gkrumbach07/openshell-dashboard@sha256:7118fca976b75f6f3de196785ed4f689a089ccd898ac283e595f712d5bd2f176
+podman tag quay.io/gkrumbach07/openshell-dashboard@sha256:7118fca976b75f6f3de196785ed4f689a089ccd898ac283e595f712d5bd2f176 $MIRROR/gkrumbach07/openshell-dashboard:0.1.1
 podman push $MIRROR/gkrumbach07/openshell-dashboard:0.1.1
 
-podman tag quay.io/oauth2-proxy/oauth2-proxy:v7.15.2 $MIRROR/oauth2-proxy/oauth2-proxy:v7.15.2
+podman pull quay.io/oauth2-proxy/oauth2-proxy@sha256:7c25fd50e1998798b79d051bd7d98ebac8dc4c6c1e54c99f4cb06f3e7d117dbd
+podman tag quay.io/oauth2-proxy/oauth2-proxy@sha256:7c25fd50e1998798b79d051bd7d98ebac8dc4c6c1e54c99f4cb06f3e7d117dbd $MIRROR/oauth2-proxy/oauth2-proxy:v7.15.2
 podman push $MIRROR/oauth2-proxy/oauth2-proxy:v7.15.2
 
-# Note: registry.redhat.io images require Red Hat login first: podman login registry.redhat.io
-podman tag registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309 $MIRROR/agent-sandbox/agent-sandbox-rhel9-operator:v0.5.0
-podman push $MIRROR/agent-sandbox/agent-sandbox-rhel9-operator:v0.5.0
-
-podman tag registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3 $MIRROR/agent-sandbox/agent-sandbox-router:v0.5.0
-podman push $MIRROR/agent-sandbox/agent-sandbox-router:v0.5.0
+# Note: registry.redhat.io images require: podman login registry.redhat.io
+podman pull registry.k8s.io/agent-sandbox/agent-sandbox-controller@sha256:c33439351fcb5e6b85fed69e9b81e7fa1a7d8d5fce1e311f6b4086ca6bcf3502
+podman tag registry.k8s.io/agent-sandbox/agent-sandbox-controller@sha256:c33439351fcb5e6b85fed69e9b81e7fa1a7d8d5fce1e311f6b4086ca6bcf3502 $MIRROR/agent-sandbox/agent-sandbox-controller:v0.5.0
+podman push $MIRROR/agent-sandbox/agent-sandbox-controller:v0.5.0
 ```
 
 **Verify (on disconnected cluster):**
