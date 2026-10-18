@@ -628,8 +628,8 @@ openshell sandbox exec --tty openclaw-native -- openclaw-start   # Launch TUI
 | 1 | CLI version must be exactly 0.1.3 | `openshell --version` before proceeding |
 | 2 | macOS uses `base64 -D`, Linux uses `base64 -d` | Check your OS |
 | 3 | mTLS directory must exist before cert extraction | `mkdir -p "$TLS_DIR"` first |
-| 4 | Keycloak tokens missing `sub` claim | Assign the `basic` client scope to all clients (Step 8c in Phase 3) |
-| 5 | Dashboard flashing / 401 errors | Gateway `adminRole`/`userRole` must match Keycloak role names exactly |
+| 4 | Keycloak tokens missing `sub` claim (causes dashboard flashing/redirect loop) | Assign the `basic` client scope to all clients (Step 8c in Phase 3). Symptom: dashboard loads then flashes back to login, or gateway logs show `invalid token: missing field sub` |
+| 5 | Dashboard flashing / 401 errors (roles) | Gateway `adminRole`/`userRole` must match Keycloak client role names exactly. Symptom: dashboard shows "role required" error or keeps redirecting |
 | 6 | `fullScopeAllowed` hides roles from tokens | Keep `false` and add explicit scope mappings instead |
 | 7 | Dashboard shows "role required" error | User must be in the correct group with the matching client role |
 | 8 | Port-forward dies between commands | Run it in a separate dedicated terminal |
