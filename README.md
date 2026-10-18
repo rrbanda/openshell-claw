@@ -203,6 +203,11 @@ oc auth can-i use scc/privileged --as=system:serviceaccount:openshell-0-1-3:open
 #   PLACEHOLDER_REGISTRY      -> your mirror registry WITH nvidia prefix
 #                                Example: registry.example.com:5000/nvidia
 #                                (chart appends /openshell/gateway etc.)
+#
+#   IMPORTANT: Gateway and Dashboard need DIFFERENT registry values:
+#     Gateway values:   registry.example.com:5000/nvidia   (repos: openshell/*)
+#     Dashboard values: registry.example.com:5000          (repos: gkrumbach07/*, oauth2-proxy/*)
+#
 #   PLACEHOLDER_SANDBOX_IMAGE -> default sandbox base image in your mirror
 #                                Example: registry.example.com:5000/nvidia/base/ubuntu
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
@@ -577,6 +582,7 @@ openshell sandbox exec --tty openclaw-native -- openclaw-start   # Launch TUI
 | 8 | Port-forward dies between commands | Run it in a separate dedicated terminal |
 | 9 | "Account is not fully set up" on token request | Set firstName, lastName, email on the Keycloak user |
 | 10 | Agent Sandbox images need Red Hat login | `podman login registry.redhat.io` before pulling |
+| 11 | Gateway and Dashboard need DIFFERENT `PLACEHOLDER_REGISTRY` values | Gateway: `mirror/nvidia`, Dashboard: `mirror` (no suffix). See table in values.yaml |
 
 ---
 

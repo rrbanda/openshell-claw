@@ -7,6 +7,12 @@
 #                                The chart appends /openshell/gateway, /openshell/supervisor, etc.
 #                                So the full image becomes: registry.example.com:5000/nvidia/openshell/gateway:0.1.3
 #
+#                                IMPORTANT: The gateway and dashboard charts need DIFFERENT registry values:
+#                                | Chart     | PLACEHOLDER_REGISTRY value        | Why                            |
+#                                |-----------|-----------------------------------|--------------------------------|
+#                                | Gateway   | registry.example.com:5000/nvidia  | repos are openshell/*          |
+#                                | Dashboard | registry.example.com:5000         | repos are gkrumbach07/*, etc.  |
+#
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
 #   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api-013.roles)

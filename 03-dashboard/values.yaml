@@ -2,9 +2,18 @@
 #
 # BEFORE USING: Replace every PLACEHOLDER below with your actual values.
 #
-#   PLACEHOLDER_REGISTRY      -> your mirror registry WITH nvidia prefix for dashboard image
+#   PLACEHOLDER_REGISTRY      -> your mirror registry (WITHOUT /nvidia suffix)
 #                                Example: registry.example.com:5000
-#                                (dashboard repo path is gkrumbach07/openshell-dashboard)
+#                                Dashboard repos are: gkrumbach07/openshell-dashboard
+#                                and oauth2-proxy/oauth2-proxy
+#
+#                                NOTE: This is DIFFERENT from the gateway values.yaml
+#                                which needs /nvidia suffix. See the table below.
+#
+#                                | Chart     | PLACEHOLDER_REGISTRY value        | Why                            |
+#                                |-----------|-----------------------------------|--------------------------------|
+#                                | Gateway   | registry.example.com:5000/nvidia  | repos are openshell/*          |
+#                                | Dashboard | registry.example.com:5000         | repos are gkrumbach07/*, etc.  |
 #   PLACEHOLDER_DASH_HOST     -> dashboard route hostname (e.g. dashboard.example.com)
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
