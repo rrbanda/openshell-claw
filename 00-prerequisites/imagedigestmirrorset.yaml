@@ -1,0 +1,88 @@
+# ImageDigestMirrorSet for OpenShell 0.1.3 disconnected deployment
+#
+# Apply this on your OpenShift cluster to redirect image pulls from
+# public registries to your internal mirror registry.
+#
+# BEFORE USING: Replace PLACEHOLDER_MIRROR with your mirror registry.
+#   Example: registry.example.com:5000
+#
+# Usage:
+#   sed 's|PLACEHOLDER_MIRROR|registry.example.com:5000|g' imagedigestmirrorset.yaml | oc apply -f -
+#
+# This file covers ALL images needed for OpenShell + Dashboard + OpenClaw.
+# After applying, pods will pull from your mirror transparently -- no need
+# to change Helm values or image references in manifests.
+#
+# References:
+#   https://docs.openshift.com/container-platform/4.20/openshift_images/image-configuration.html
+apiVersion: config.openshift.io/v1
+kind: ImageDigestMirrorSet
+metadata:
+  name: openshell-013-mirror
+spec:
+  imageDigestMirrors:
+    # --- OpenShell Gateway ---
+    - source: ghcr.io/nvidia/openshell/gateway
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/openshell/gateway
+    # --- OpenShell Supervisor ---
+    - source: ghcr.io/nvidia/openshell/supervisor
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/openshell/supervisor
+    # --- OpenShell Sandbox Runtime ---
+    - source: ghcr.io/nvidia/openshell/sandbox
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/openshell/sandbox
+    # --- Default Sandbox Base Image ---
+    - source: nvcr.io/nvidia/base/ubuntu
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/base/ubuntu
+    # --- OpenClaw Application ---
+    - source: quay.io/opendatahub/odh-openshell-sandbox-openclaw
+      mirrors:
+        - PLACEHOLDER_MIRROR/opendatahub/odh-openshell-sandbox-openclaw
+    # --- Dashboard ---
+    - source: quay.io/gkrumbach07/openshell-dashboard
+      mirrors:
+        - PLACEHOLDER_MIRROR/gkrumbach07/openshell-dashboard
+    # --- oauth2-proxy ---
+    - source: quay.io/oauth2-proxy/oauth2-proxy
+      mirrors:
+        - PLACEHOLDER_MIRROR/oauth2-proxy/oauth2-proxy
+    # --- Agent Sandbox Controller (upstream) ---
+    - source: registry.k8s.io/agent-sandbox/agent-sandbox-controller
+      mirrors:
+        - PLACEHOLDER_MIRROR/agent-sandbox/agent-sandbox-controller
+---
+# ImageTagMirrorSet (alternative -- use if your mirror uses tags instead of digests)
+# Some mirrors re-tag images. Use this alongside or instead of the IDMS above.
+apiVersion: config.openshift.io/v1
+kind: ImageTagMirrorSet
+metadata:
+  name: openshell-013-tag-mirror
+spec:
+  imageTagMirrors:
+    - source: ghcr.io/nvidia/openshell/gateway
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/openshell/gateway
+    - source: ghcr.io/nvidia/openshell/supervisor
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/openshell/supervisor
+    - source: ghcr.io/nvidia/openshell/sandbox
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/openshell/sandbox
+    - source: nvcr.io/nvidia/base/ubuntu
+      mirrors:
+        - PLACEHOLDER_MIRROR/nvidia/base/ubuntu
+    - source: quay.io/opendatahub/odh-openshell-sandbox-openclaw
+      mirrors:
+        - PLACEHOLDER_MIRROR/opendatahub/odh-openshell-sandbox-openclaw
+    - source: quay.io/gkrumbach07/openshell-dashboard
+      mirrors:
+        - PLACEHOLDER_MIRROR/gkrumbach07/openshell-dashboard
+    - source: quay.io/oauth2-proxy/oauth2-proxy
+      mirrors:
+        - PLACEHOLDER_MIRROR/oauth2-proxy/oauth2-proxy
+    - source: registry.k8s.io/agent-sandbox/agent-sandbox-controller
+      mirrors:
+        - PLACEHOLDER_MIRROR/agent-sandbox/agent-sandbox-controller

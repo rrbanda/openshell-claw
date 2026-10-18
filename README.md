@@ -121,8 +121,28 @@ podman push $MIRROR/agent-sandbox/agent-sandbox-router:v0.5.0
 ```bash
 # For each image, check it exists in the mirror
 skopeo inspect docker://registry.example.com:5000/nvidia/openshell/gateway:0.1.3
-# Repeat for all 9 images. Or run: ./scripts/02-verify-mirror.sh
+# Repeat for all images. Or run: ./scripts/02-verify-mirror.sh
 ```
+
+**OpenShift ImageDigestMirrorSet (recommended for disconnected OpenShift):**
+
+If your cluster uses `ImageDigestMirrorSet` or `ImageTagMirrorSet` to remap registries,
+apply the provided YAML. This lets pods pull using original image references while
+OpenShift transparently redirects to your mirror:
+
+```bash
+# Replace PLACEHOLDER_MIRROR with your registry, then apply:
+sed 's|PLACEHOLDER_MIRROR|registry.example.com:5000|g' \
+  00-prerequisites/imagedigestmirrorset.yaml | oc apply -f -
+
+# Verify it was created:
+oc get imagedigestmirrorset openshell-013-mirror
+oc get imagetagmirrorset openshell-013-tag-mirror
+```
+
+When using IDMS/ITMS, you do NOT need to change `global.image.registry` in the
+Helm values -- OpenShift handles the redirect at the node level. However, you still
+need to mirror all images to the paths defined in the YAML.
 
 ---
 
