@@ -483,6 +483,43 @@ oc -n openshell-0-1-3 logs deployment/openshell-dashboard -c dashboard --tail=10
 
 ## Phase 5: Deploy OpenClaw
 
+Choose **one** of two CLI access methods:
+
+### Option A: Route + OIDC (recommended -- no port-forward needed)
+
+Requires the gateway Route to be enabled (see `01-gateway/values.yaml` comments).
+
+**Script path:**
+```bash
+# After enabling the Route and helm upgrade:
+GATEWAY_HOST=openshell-gateway.apps.example.com
+KC_ISSUER=https://keycloak.example.com/realms/openshift
+
+# Register gateway via Route with OIDC
+openshell gateway add "https://$GATEWAY_HOST" \
+  --name my-gateway \
+  --oidc-issuer "$KC_ISSUER" \
+  --oidc-client-id openshell-cli-013 \
+  --oidc-audience openshell-api-013 \
+  --oidc-scopes "openid profile email"
+# Browser opens for Keycloak login
+
+# CRITICAL: Copy the CA cert (gateway uses self-signed cert)
+mkdir -p ~/.config/openshell/gateways/my-gateway/mtls
+oc -n openshell-0-1-3 get secret openshell-client-tls \
+  -o jsonpath='{.data.ca\.crt}' | base64 -d \
+  > ~/.config/openshell/gateways/my-gateway/mtls/ca.crt
+
+# Verify
+export OPENSHELL_GATEWAY=my-gateway
+openshell status
+# Expected: Connected, Authenticated (OIDC), Version: 0.1.3
+```
+
+Then skip to "Create workspace and deploy OpenClaw" below.
+
+### Option B: Port-forward + mTLS (simpler setup, requires oc access)
+
 **Script path:**
 ```bash
 cd 04-openclaw
@@ -494,7 +531,7 @@ export WORKSPACE_NAME=openclaw-test
 ./launch-tui.sh
 ```
 
-**Manual steps:**
+**Manual steps (Option B -- port-forward + mTLS):**
 
 ```bash
 # Step 1: Start port-forward (keep this running in a separate terminal)
@@ -641,6 +678,8 @@ openshell sandbox exec --tty openclaw-native -- openclaw-start   # Launch TUI
 | 14 | Keycloak uses private/self-signed CA | Create `keycloak-ca` ConfigMap and uncomment `oidc.caConfigMapName` in gateway values |
 | 15 | Changed the namespace from `openshell-0-1-3` | Update it in ALL files: namespace.yaml, scc-rbac.yaml, values, install/verify scripts, dashboard values, reconnect script (16 places total) |
 | 16 | Sandbox pods denied by SCC in managed workspace namespace | After creating each workspace, bind SCC in the new namespace. `create-workspace.sh` does this automatically. Manual: `oc adm policy add-scc-to-user privileged -z openshell-0-1-3-sandbox -n <managed-ns>` |
+| 17 | CLI via Route gets `UnknownIssuer` error | Copy the gateway CA cert: `oc get secret openshell-client-tls -o jsonpath='{.data.ca\.crt}' \| base64 -d > ~/.config/openshell/gateways/<name>/mtls/ca.crt`. Required because the gateway uses a self-signed CA |
+| 18 | Enabling Route requires cert regeneration | Delete TLS secrets before `helm upgrade` so certgen creates new certs with the Route hostname SAN. See `01-gateway/values.yaml` Route section |
 
 ---
 
