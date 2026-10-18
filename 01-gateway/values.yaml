@@ -100,36 +100,36 @@ rbac:
 networkPolicy:
   enabled: true
 
-# --- OpenShift Route (recommended for production -- no port-forward needed) ---
-# Enables direct CLI and dashboard access without oc port-forward.
-# The Route uses TLS passthrough -- the gateway terminates mTLS directly.
+# --- OpenShift Route (creates a Route for direct CLI + OIDC access) ---
+# TLS passthrough -- the gateway terminates mTLS directly.
+# Replace PLACEHOLDER_GATEWAY_HOST with your Route hostname.
+# If you do NOT want a Route (using port-forward instead), comment these out.
+openshiftRoute:
+  enabled: true
+  host: "PLACEHOLDER_GATEWAY_HOST"
+
+# --- PKI bootstrap ---
+# serverDnsNames MUST include the Route hostname so the server cert covers it.
+pkiInitJob:
+  enabled: true
+  serverIpAddresses:
+    - "127.0.0.1"
+  serverDnsNames:
+    - "PLACEHOLDER_GATEWAY_HOST"
+
+# After deploying, register the CLI via Route + OIDC:
+#   openshell gateway add https://PLACEHOLDER_GATEWAY_HOST \
+#     --name my-gateway \
+#     --oidc-issuer PLACEHOLDER_KC_ISSUER \
+#     --oidc-client-id openshell-cli-GATEWAY_NAME \
+#     --oidc-audience PLACEHOLDER_KC_AUDIENCE \
+#     --oidc-scopes "openid profile email"
 #
-# To enable:
-# 1. Uncomment the openshiftRoute and pkiInitJob.serverDnsNames below
-# 2. Replace PLACEHOLDER_GATEWAY_HOST with your Route hostname
-# 3. Delete existing TLS secrets so certgen regenerates with the new SAN:
-#      oc -n openshell-0-1-3 delete secret openshell-server-tls openshell-client-tls openshell-0-1-3-jwt-keys
-# 4. Run helm upgrade (certgen hook recreates secrets with the Route SAN)
-# 5. Register the CLI with OIDC (not --local):
-#      openshell gateway add https://PLACEHOLDER_GATEWAY_HOST \
-#        --name my-gateway \
-#        --oidc-issuer PLACEHOLDER_KC_ISSUER \
-#        --oidc-client-id openshell-cli-GATEWAY_NAME \
-#        --oidc-audience PLACEHOLDER_KC_AUDIENCE \
-#        --oidc-scopes "openid profile email"
-# 6. Copy the CA cert (required for self-signed gateway cert):
-#      mkdir -p ~/.config/openshell/gateways/my-gateway/mtls
-#      oc -n openshell-0-1-3 get secret openshell-client-tls \
-#        -o jsonpath='{.data.ca\.crt}' | base64 -d \
-#        > ~/.config/openshell/gateways/my-gateway/mtls/ca.crt
-#
-# openshiftRoute:
-#   enabled: true
-#   host: "PLACEHOLDER_GATEWAY_HOST"
-#
-# pkiInitJob:
-#   serverDnsNames:
-#     - "PLACEHOLDER_GATEWAY_HOST"
+# Then copy the CA cert (self-signed CA):
+#   mkdir -p ~/.config/openshell/gateways/my-gateway/mtls
+#   oc -n openshell-0-1-3 get secret openshell-client-tls \
+#     -o jsonpath='{.data.ca\.crt}' | base64 -d \
+#     > ~/.config/openshell/gateways/my-gateway/mtls/ca.crt
 
 # --- Default sandbox base image (REQUIRED for disconnected) ---
 # The dashboard UI "Create Sandbox" form defaults to empty image field.
