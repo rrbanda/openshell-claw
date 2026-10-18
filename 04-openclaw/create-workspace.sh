@@ -33,6 +33,30 @@ export OPENSHELL_WORKSPACE="$WORKSPACE_NAME"
 echo "=== Creating workspace: $WORKSPACE_NAME ==="
 OPENSHELL_WORKSPACE=default openshell workspace create --name "$WORKSPACE_NAME" 2>&1 || true
 
+# In managed workspace mode, the gateway creates a new namespace for the workspace.
+# The sandbox SA in that namespace needs the privileged SCC on OpenShift.
+GATEWAY_RELEASE="${GATEWAY_RELEASE:-openshell-0-1-3}"
+MANAGED_NS="openshell-${GATEWAY_RELEASE}-${WORKSPACE_NAME}"
+echo ""
+echo "=== Binding privileged SCC in managed namespace: $MANAGED_NS ==="
+echo "  (waiting for namespace to be created by the gateway...)"
+for i in $(seq 1 30); do
+  if oc get namespace "$MANAGED_NS" &>/dev/null; then
+    echo "  Namespace $MANAGED_NS found."
+    break
+  fi
+  sleep 2
+done
+if oc get namespace "$MANAGED_NS" &>/dev/null; then
+  oc adm policy add-scc-to-user privileged \
+    -z "${GATEWAY_RELEASE}-sandbox" -n "$MANAGED_NS" 2>&1
+  echo "  SCC binding created."
+else
+  echo "  WARNING: Namespace $MANAGED_NS not found after 60s."
+  echo "  You may need to manually bind SCC after the namespace appears:"
+  echo "    oc adm policy add-scc-to-user privileged -z ${GATEWAY_RELEASE}-sandbox -n $MANAGED_NS"
+fi
+
 echo ""
 echo "=== Importing model provider profile ==="
 openshell profile lint -f "$PROFILE_FILE"

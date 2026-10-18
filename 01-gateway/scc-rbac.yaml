@@ -10,3 +10,14 @@ subjects:
   - kind: ServiceAccount
     name: openshell-0-1-3-sandbox
     namespace: openshell-0-1-3
+# NOTE: In managed workspace mode, the gateway creates ADDITIONAL namespaces
+# per workspace (e.g. openshell-openshell-0-1-3-myworkspace).
+# The sandbox SA in those namespaces also needs privileged SCC.
+#
+# The create-workspace.sh script in 04-openclaw/ automatically adds the
+# SCC binding for each new managed namespace after workspace creation.
+#
+# If creating workspaces manually, run this after each workspace create:
+#   MANAGED_NS=openshell-openshell-0-1-3-<workspace-name>
+#   oc adm policy add-scc-to-user privileged \
+#     -z openshell-0-1-3-sandbox -n $MANAGED_NS

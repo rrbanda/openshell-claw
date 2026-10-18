@@ -44,7 +44,7 @@ openshell --version   # Must report 0.1.3
 
 ## Image Inventory
 
-These 9 images must be mirrored to your internal registry. Full details with digests and `podman pull` commands are in `images.txt`.
+These 8 images must be mirrored to your internal registry. Full details with digests and `podman pull` commands are in `images.txt`. Red Hat productized alternatives for Agent Sandbox are listed as comments in images.txt.
 
 | # | Image | Purpose |
 |---|---|---|
@@ -244,6 +244,7 @@ oc auth can-i use scc/privileged --as=system:serviceaccount:openshell-0-1-3:open
 #   PLACEHOLDER_USER_ROLE     -> User role name (e.g. users-a)
 
 # Step 6: Install the gateway from the local chart
+# NOTE: Run this from the REPO ROOT directory (where charts/ is)
 helm upgrade --install openshell-0-1-3 ./charts/openshell-gateway/ \
   --namespace openshell-0-1-3 \
   --values 01-gateway/values.yaml \
@@ -421,7 +422,11 @@ cd 03-dashboard
 
 ```bash
 # Step 1: Get the dashboard client secret from Keycloak
-# (This was printed by create-clients.sh in Phase 3, or get it from Keycloak console)
+# NOTE: If $AUTH is not set (e.g. new terminal), re-acquire the admin token first:
+#   TOKEN=$(curl -sk -X POST "$KC_HOST/realms/master/protocol/openid-connect/token" \
+#     -d "grant_type=password&client_id=admin-cli&username=$KC_ADMIN_USER&password=$KC_ADMIN_PASS" | \
+#     python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+#   AUTH="Authorization: Bearer $TOKEN"
 DASH_UUID=$(curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/clients?clientId=openshell-dashboard-013" | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
 curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/clients/$DASH_UUID/client-secret" | python3 -c "import sys,json; print(json.load(sys.stdin)['value'])"
 # Save this value -- you need it below
@@ -448,6 +453,7 @@ oc -n openshell-0-1-3 get secret openshell-dashboard-oidc
 #   PLACEHOLDER_API_CLIENT  -> openshell-api-013
 
 # Step 5: Install the dashboard from the local chart
+# NOTE: Run this from the REPO ROOT directory (where charts/ is)
 helm upgrade --install openshell-dashboard ./charts/openshell-dashboard/ \
   --namespace openshell-0-1-3 \
   --values 03-dashboard/values.yaml \
@@ -534,6 +540,14 @@ OPENSHELL_WORKSPACE=default openshell workspace create --name openclaw-test
 # Step 8: Verify workspace
 openshell workspace list
 # Expected: openclaw-test is listed and Active
+
+# Step 8b: Bind SCC in the managed workspace namespace (CRITICAL for OpenShift)
+# Managed mode auto-creates a namespace. The sandbox SA there needs privileged SCC.
+MANAGED_NS=openshell-openshell-0-1-3-openclaw-test
+echo "Waiting for managed namespace..."
+until oc get namespace "$MANAGED_NS" &>/dev/null; do sleep 2; done
+oc adm policy add-scc-to-user privileged -z openshell-0-1-3-sandbox -n "$MANAGED_NS"
+# Expected: clusterrole added
 
 # Step 9: Edit 04-openclaw/model-provider-profile.yaml
 # Replace PLACEHOLDER_MODEL_HOST with your model API hostname
@@ -626,6 +640,7 @@ openshell sandbox exec --tty openclaw-native -- openclaw-start   # Launch TUI
 | 13 | Mirror registry needs auth but pods can't pull | Create an imagePullSecret and uncomment `sandboxImagePullSecrets` in gateway values. See `01-gateway/values.yaml` comments |
 | 14 | Keycloak uses private/self-signed CA | Create `keycloak-ca` ConfigMap and uncomment `oidc.caConfigMapName` in gateway values |
 | 15 | Changed the namespace from `openshell-0-1-3` | Update it in ALL files: namespace.yaml, scc-rbac.yaml, values, install/verify scripts, dashboard values, reconnect script (16 places total) |
+| 16 | Sandbox pods denied by SCC in managed workspace namespace | After creating each workspace, bind SCC in the new namespace. `create-workspace.sh` does this automatically. Manual: `oc adm policy add-scc-to-user privileged -z openshell-0-1-3-sandbox -n <managed-ns>` |
 
 ---
 
