@@ -5,7 +5,7 @@
 #   OPENSHELL_GATEWAY   -> registered gateway name
 #   WORKSPACE_NAME      -> workspace name (must exist)
 #   MODEL_BASE_URL      -> model API base URL (e.g. https://api.example.com/v1)
-#   MODEL_ID            -> model identifier (e.g. gemini-2.5-flash)
+#   MODEL_ID            -> model identifier (e.g. gpt-4, llama-3, mistral-7b)
 #   OPENCLAW_IMAGE      -> OpenClaw image (use the mirror registry path)
 #
 # Usage: ./create-sandbox.sh
