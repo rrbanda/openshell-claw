@@ -48,7 +48,13 @@ server:
   disableTls: false
 
   auth:
-    allowUnauthenticatedUsers: false
+    # Allow mTLS-only CLI connections without an OIDC token.
+    # Set to true for disconnected/bastion environments where the CLI
+    # cannot open a browser for OIDC login.
+    # Set to false only if ALL CLI users can authenticate via OIDC
+    # (e.g. laptop with browser that can reach Keycloak).
+    # The dashboard always authenticates via oauth2-proxy regardless.
+    allowUnauthenticatedUsers: true
 
   tls:
     enableMtls: true
