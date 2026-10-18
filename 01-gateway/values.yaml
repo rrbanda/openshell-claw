@@ -66,8 +66,13 @@ server:
     issuer: "PLACEHOLDER_KC_ISSUER"
     audience: "PLACEHOLDER_KC_AUDIENCE"
     rolesClaim: "PLACEHOLDER_KC_ROLESCLAIM"
-    adminRole: "PLACEHOLDER_ADMIN_ROLE"
-    userRole: "PLACEHOLDER_USER_ROLE"
+    # Roles left empty = authentication-only mode.
+    # mTLS CLI users get full access without OIDC tokens.
+    # OIDC dashboard users also get full access (identity still tracked).
+    # To enforce roles, set these AND set allowUnauthenticatedUsers=false,
+    # but then CLI must use OIDC (requires browser).
+    adminRole: ""
+    userRole: ""
 
 # --- PKI bootstrap ---
 pkiInitJob:
