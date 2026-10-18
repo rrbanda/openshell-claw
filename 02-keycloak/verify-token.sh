@@ -20,10 +20,10 @@ echo "Requesting token for $USERNAME via $CLI_CLIENT..."
 RESULT=$(curl -sk -X POST "$KC_HOST/realms/$KC_REALM/protocol/openid-connect/token" \
   -d "grant_type=password&client_id=$CLI_CLIENT&username=$USERNAME&password=$PASSWORD")
 
-python3 -c "
+echo "$RESULT" | python3 -c "
 import json, base64, sys
 
-d = json.loads('''$RESULT''')
+d = json.load(sys.stdin)
 if 'error' in d:
     print(f'ERROR: {d[\"error\"]}: {d.get(\"error_description\",\"\")}')
     sys.exit(1)

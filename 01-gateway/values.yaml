@@ -2,14 +2,22 @@
 #
 # BEFORE USING: Replace every PLACEHOLDER below with your actual values.
 #
-#   PLACEHOLDER_REGISTRY      -> your mirror registry (e.g. registry.example.com:5000)
+#   PLACEHOLDER_REGISTRY      -> your mirror registry WITH the nvidia prefix
+#                                Example: registry.example.com:5000/nvidia
+#                                The chart appends /openshell/gateway, /openshell/supervisor, etc.
+#                                So the full image becomes: registry.example.com:5000/nvidia/openshell/gateway:0.1.3
+#
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
-#   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api)
-#   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api.roles)
-#   PLACEHOLDER_ADMIN_ROLE    -> Admin role name (e.g. administrators)
-#   PLACEHOLDER_USER_ROLE     -> User role name (e.g. users)
+#   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
+#   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api-013.roles)
+#   PLACEHOLDER_ADMIN_ROLE    -> Admin role name (e.g. administrators-a)
+#   PLACEHOLDER_USER_ROLE     -> User role name (e.g. users-a)
+#   PLACEHOLDER_SANDBOX_IMAGE -> Default sandbox base image in your mirror
+#                                Example: registry.example.com:5000/nvidia/base/ubuntu
 
 # --- Image registry override for disconnected ---
+# IMPORTANT: This must include the /nvidia prefix because chart repositories
+# are relative paths like openshell/gateway, openshell/supervisor, etc.
 global:
   image:
     registry: PLACEHOLDER_REGISTRY
@@ -64,3 +72,11 @@ rbac:
 # --- Network policy ---
 networkPolicy:
   enabled: true
+
+# --- Default sandbox base image (disconnected override) ---
+# The chart default is nvcr.io/nvidia/base/ubuntu:24.04 which won't resolve
+# in a disconnected environment. Override with your mirror path.
+sandbox:
+  image:
+    repository: PLACEHOLDER_SANDBOX_IMAGE
+    tag: "24.04"

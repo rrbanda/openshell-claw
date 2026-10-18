@@ -2,7 +2,9 @@
 #
 # BEFORE USING: Replace every PLACEHOLDER below with your actual values.
 #
-#   PLACEHOLDER_REGISTRY      -> your mirror registry (e.g. registry.example.com:5000)
+#   PLACEHOLDER_REGISTRY      -> your mirror registry WITH nvidia prefix for dashboard image
+#                                Example: registry.example.com:5000
+#                                (dashboard repo path is gkrumbach07/openshell-dashboard)
 #   PLACEHOLDER_DASH_HOST     -> dashboard route hostname (e.g. dashboard.example.com)
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)

@@ -67,17 +67,28 @@ podman pull quay.io/gkrumbach07/openshell-dashboard:0.1.1
 podman pull quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
 
 # ============================================================================
-# 8. Agent Sandbox Controller
+# 8. Agent Sandbox Controller (upstream)
 #    Used by: agent-sandbox-system namespace (Kubernetes CRD controller)
+#    This is the image referenced in the vendored manifest (00-prerequisites/).
+#    NOTE: The running cluster may use registry.redhat.io productized images
+#    instead; mirror whichever your manifest references.
+# ============================================================================
+# Tag:    registry.k8s.io/agent-sandbox/agent-sandbox-controller:v0.5.0
+podman pull registry.k8s.io/agent-sandbox/agent-sandbox-controller:v0.5.0
+
+# ============================================================================
+# 9. Agent Sandbox Controller (Red Hat productized, alternative)
+#    Used by: clusters that installed via OLM / Red Hat operator
+#    Only needed if your cluster uses the Red Hat operator instead of upstream.
 #    NOTE: registry.redhat.io requires authentication (Red Hat subscription)
 # ============================================================================
 # Digest: registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
-podman pull registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
+# podman pull registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
 
 # ============================================================================
-# 9. Agent Sandbox Router
-#    Used by: agent-sandbox-system namespace (sandbox network routing)
-#    NOTE: registry.redhat.io requires authentication (Red Hat subscription)
+# 10. Agent Sandbox Router (Red Hat productized, alternative)
+#     Only needed if your cluster uses the Red Hat operator.
+#     NOTE: registry.redhat.io requires authentication (Red Hat subscription)
 # ============================================================================
 # Digest: registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3
-podman pull registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3
+# podman pull registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3

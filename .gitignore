@@ -1,0 +1,22 @@
+# Secrets -- never commit these
+*.env
+*.secret
+*.key
+*.pem
+*-secret.yaml
+*-sealed-secret.yaml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Temp files
+*.tmp
+*.bak

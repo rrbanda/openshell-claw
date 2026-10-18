@@ -17,10 +17,30 @@ Every phase has **two paths**: run the script, or run the individual commands on
 ## Prerequisites
 
 - OpenShift 4.20+ with cluster-admin access
-- `oc`, `helm`, and `openshell` 0.1.3 CLIs installed
+- `oc` and `helm` CLIs installed
+- `openshell` CLI v0.1.3 installed (see below)
 - A container registry accessible from the disconnected cluster
 - A Keycloak instance accessible from the cluster and user workstations
 - An OpenAI-compatible model endpoint accessible from the cluster
+
+### Installing the OpenShell CLI (disconnected)
+
+The CLI is a single binary. On a connected machine, download it:
+```bash
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh \
+  | OPENSHELL_VERSION=v0.1.3 sh
+```
+
+Then copy the `openshell` binary to the disconnected machine:
+```bash
+# Find where it was installed
+which openshell
+# Copy it to the disconnected machine (e.g. via USB, SCP, etc.)
+# Then on the disconnected machine:
+chmod +x openshell
+sudo mv openshell /usr/local/bin/
+openshell --version   # Must report 0.1.3
+```
 
 ## Image Inventory
 
@@ -110,6 +130,11 @@ skopeo inspect docker://registry.example.com:5000/nvidia/openshell/gateway:0.1.3
 
 **Script path:**
 ```bash
+# First install the CRD and controller:
+oc apply -f 00-prerequisites/agent-sandbox-manifest.yaml
+oc -n agent-sandbox-system rollout status deployment/agent-sandbox-controller --timeout=300s
+
+# Then verify all prerequisites:
 ./00-prerequisites/verify-prerequisites.sh
 ```
 
@@ -126,6 +151,9 @@ oc whoami
 oc whoami --show-server
 
 # Step 3: Apply the Agent Sandbox manifest (vendored in this repo)
+# NOTE: The manifest references registry.k8s.io images. In a disconnected
+# environment, edit the manifest to point at your mirror registry first:
+#   sed -i 's|registry.k8s.io|YOUR_MIRROR_REGISTRY|g' 00-prerequisites/agent-sandbox-manifest.yaml
 oc apply -f 00-prerequisites/agent-sandbox-manifest.yaml
 
 # Step 4: Wait for the controller to be ready
@@ -172,7 +200,11 @@ oc auth can-i use scc/privileged --as=system:serviceaccount:openshell-0-1-3:open
 
 # Step 5: Edit 01-gateway/values.yaml
 # Replace ALL of these PLACEHOLDERs:
-#   PLACEHOLDER_REGISTRY      -> your mirror registry (e.g. registry.example.com:5000)
+#   PLACEHOLDER_REGISTRY      -> your mirror registry WITH nvidia prefix
+#                                Example: registry.example.com:5000/nvidia
+#                                (chart appends /openshell/gateway etc.)
+#   PLACEHOLDER_SANDBOX_IMAGE -> default sandbox base image in your mirror
+#                                Example: registry.example.com:5000/nvidia/base/ubuntu
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
 #   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api-013.roles)
@@ -354,8 +386,9 @@ curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/clients/$DASH_UUID/client-s
 COOKIE_SECRET=$(openssl rand -hex 16)
 oc -n openshell-0-1-3 create secret generic openshell-dashboard-oidc \
   --from-literal=client-id=openshell-dashboard-013 \
-  --from-literal=client-secret=YOUR_CLIENT_SECRET_HERE \
+  --from-literal=client-secret=<PASTE_YOUR_CLIENT_SECRET_HERE> \
   --from-literal=cookie-secret=$COOKIE_SECRET
+# ^ Replace <PASTE_YOUR_CLIENT_SECRET_HERE> with the secret from Phase 3
 
 # Step 3: Verify the secret exists
 oc -n openshell-0-1-3 get secret openshell-dashboard-oidc
