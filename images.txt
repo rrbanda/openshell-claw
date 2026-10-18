@@ -1,0 +1,9 @@
+ghcr.io/nvidia/openshell/gateway:0.1.3
+ghcr.io/nvidia/openshell/supervisor:0.1.3
+ghcr.io/nvidia/openshell/sandbox:0.1.3
+nvcr.io/nvidia/base/ubuntu:24.04
+quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441
+quay.io/gkrumbach07/openshell-dashboard:0.1.1
+quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
+registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
+registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3

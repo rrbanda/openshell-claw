@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 0.1.1
+description: OIDC-protected web dashboard for an OpenShell gateway
+name: openshell-dashboard
+type: application
+version: 0.1.1

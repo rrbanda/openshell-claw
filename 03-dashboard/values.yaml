@@ -1,0 +1,45 @@
+# OpenShell Dashboard 0.1.1 Helm values -- disconnected environment
+#
+# BEFORE USING: Replace every PLACEHOLDER below with your actual values.
+#
+#   PLACEHOLDER_REGISTRY      -> your mirror registry (e.g. registry.example.com:5000)
+#   PLACEHOLDER_DASH_HOST     -> dashboard route hostname (e.g. dashboard.example.com)
+#   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
+#   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
+#   PLACEHOLDER_DASH_CLIENT   -> Keycloak dashboard client ID (e.g. openshell-dashboard-013)
+#   PLACEHOLDER_API_CLIENT    -> Keycloak API client ID for role filtering
+
+# --- Image registry override for disconnected ---
+global:
+  image:
+    registry: PLACEHOLDER_REGISTRY
+
+# --- OpenShift pod security ---
+podSecurityContext: null
+
+securityContext:
+  runAsUser: null
+
+# --- Gateway connection ---
+gateway:
+  serviceName: openshell-0-1-3
+  caSecretName: openshell-client-tls
+  clientCertSecretName: openshell-client-tls
+
+# --- OIDC (Keycloak) ---
+oidc:
+  provider: keycloak-oidc
+  issuer: "PLACEHOLDER_KC_ISSUER"
+  clientId: "PLACEHOLDER_DASH_CLIENT"
+  audience: "PLACEHOLDER_KC_AUDIENCE"
+  existingSecret: openshell-dashboard-oidc
+  codeChallengeMethod: S256
+  redirectURL: "https://PLACEHOLDER_DASH_HOST/oauth2/callback"
+  allowedRoles:
+    - "PLACEHOLDER_API_CLIENT:users-a"
+    - "PLACEHOLDER_API_CLIENT:administrators-a"
+
+# --- OpenShift Route ---
+openshiftRoute:
+  enabled: true
+  host: "PLACEHOLDER_DASH_HOST"
