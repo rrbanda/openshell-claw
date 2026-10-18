@@ -38,7 +38,10 @@ podman pull ghcr.io/nvidia/openshell/sandbox@sha256:2658534bfb3f1ebba4bb7792e9e8
 
 # ============================================================================
 # 4. Default Sandbox Base Image
-#    Used by: gateway default_image for standalone sandboxes (not OpenClaw)
+#    Used by: gateway default_image when creating sandboxes without --from
+#    REQUIRED: The dashboard UI "Create Sandbox" form defaults to empty image,
+#    which causes the gateway to pull this image. Without it, sandboxes created
+#    from the dashboard with no image specified will fail.
 # ============================================================================
 # Tag:    nvcr.io/nvidia/base/ubuntu:24.04
 # Digest: nvcr.io/nvidia/base/ubuntu@sha256:fdfe3e69644d4c52ccdf2195413d1037e17b0b2bc8ff000806c548cafdc686b6

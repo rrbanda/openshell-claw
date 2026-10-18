@@ -33,7 +33,7 @@ spec:
     - source: ghcr.io/nvidia/openshell/sandbox
       mirrors:
         - PLACEHOLDER_MIRROR/nvidia/openshell/sandbox
-    # --- Default Sandbox Base Image ---
+    # --- Default Sandbox Base Image (used by dashboard "Create Sandbox" with empty image) ---
     - source: nvcr.io/nvidia/base/ubuntu
       mirrors:
         - PLACEHOLDER_MIRROR/nvidia/base/ubuntu

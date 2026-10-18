@@ -100,9 +100,11 @@ rbac:
 networkPolicy:
   enabled: true
 
-# --- Default sandbox base image (disconnected override) ---
-# The chart default is nvcr.io/nvidia/base/ubuntu:24.04 which won't resolve
-# in a disconnected environment. Override with your mirror path.
+# --- Default sandbox base image (REQUIRED for disconnected) ---
+# The dashboard UI "Create Sandbox" form defaults to empty image field.
+# When a user creates a sandbox without specifying an image, the gateway
+# pulls this default image. Without it mirrored, those sandboxes fail.
+# Chart default: nvcr.io/nvidia/base/ubuntu:24.04
 sandbox:
   image:
     repository: PLACEHOLDER_SANDBOX_IMAGE
