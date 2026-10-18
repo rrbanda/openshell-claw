@@ -34,6 +34,26 @@ TOKEN=$(curl -sk -X POST "$KC_HOST/realms/master/protocol/openid-connect/token" 
   python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 AUTH="Authorization: Bearer $TOKEN"
 
+# 0. Create realm if it doesn't exist
+echo "=== Checking realm: $KC_REALM ==="
+REALM_STATUS=$(curl -sk -o /dev/null -w "%{http_code}" "$KC_HOST/realms/$KC_REALM")
+if [[ "$REALM_STATUS" == "200" ]]; then
+  echo "  Realm '$KC_REALM' already exists. Using it."
+else
+  echo "  Realm '$KC_REALM' not found. Creating it..."
+  CREATE_CODE=$(curl -sk -X POST "$KC_HOST/admin/realms" \
+    -H "$AUTH" -H "Content-Type: application/json" \
+    -d "{\"realm\":\"$KC_REALM\",\"enabled\":true,\"sslRequired\":\"external\"}" \
+    -o /dev/null -w "%{http_code}")
+  if [[ "$CREATE_CODE" == "201" ]]; then
+    echo "  Realm '$KC_REALM' created."
+  else
+    echo "  ERROR: Failed to create realm (HTTP $CREATE_CODE)."
+    echo "  Create the realm manually in the Keycloak Admin Console, then re-run this script."
+    exit 1
+  fi
+fi
+
 # 1. Create groups
 echo "=== Creating groups ==="
 for g in users-a administrators-a; do

@@ -5,10 +5,11 @@ This directory contains scripts to configure Keycloak for OpenShell OIDC authent
 ## Prerequisites
 
 - **Keycloak 26.x or newer** (tested with 26.8). Red Hat build of Keycloak (RHBK) also works.
-- **An existing realm** to add OpenShell clients to. The script does NOT create a realm.
-  - You can use any existing realm (e.g. `openshift`, `openshell`, `master`).
-  - If you need a new realm, create it first in the Keycloak Admin Console.
-- **Admin access** to the realm (ability to create clients, groups, roles).
+- **A Keycloak instance accessible from the cluster**. The script will:
+  - Create the realm if it doesn't exist (e.g. if you only have `master`)
+  - Use the realm if it already exists (e.g. `openshift`, `openshell`)
+  - NOT modify or delete anything already in the realm
+- **Admin access** to Keycloak (ability to create realms, clients, groups, roles).
 
 ## What Gets Created
 

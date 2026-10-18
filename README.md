@@ -246,7 +246,7 @@ oc -n openshell-0-1-3 get configmap openshell-0-1-3-config -o jsonpath='{.data.g
 
 ## Phase 3: Configure Keycloak
 
-The script adds OpenShell clients to your **existing** Keycloak realm. It does not create a realm or modify existing objects. See `02-keycloak/README.md` for full details.
+The script adds OpenShell clients to your Keycloak. If the realm doesn't exist, it creates it. See `02-keycloak/README.md` for full details.
 
 **Script path:**
 ```bash
@@ -271,6 +271,16 @@ TOKEN=$(curl -sk -X POST "$KC_HOST/realms/master/protocol/openid-connect/token" 
   -d "grant_type=password&client_id=admin-cli&username=$KC_ADMIN_USER&password=$KC_ADMIN_PASS" | \
   python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 AUTH="Authorization: Bearer $TOKEN"
+
+# Step 0: Create realm if it doesn't exist
+REALM_STATUS=$(curl -sk -o /dev/null -w "%{http_code}" "$KC_HOST/realms/$KC_REALM")
+if [[ "$REALM_STATUS" != "200" ]]; then
+  curl -sk -X POST "$KC_HOST/admin/realms" \
+    -H "$AUTH" -H "Content-Type: application/json" \
+    -d "{\"realm\":\"$KC_REALM\",\"enabled\":true,\"sslRequired\":\"external\"}"
+  echo "Realm $KC_REALM created"
+fi
+# Expected: realm exists (200) or was just created
 
 # Step 1: Create groups
 curl -sk -X POST "$KC_HOST/admin/realms/$KC_REALM/groups" \
