@@ -149,6 +149,33 @@ DASH_UUID=$(curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/clients?clientI
 DASH_SECRET=$(curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/clients/$DASH_UUID/client-secret" | \
   python3 -c "import sys,json; print(json.load(sys.stdin)['value'])")
 
+# 9. Create a test admin user (optional -- skip if you already have users)
+echo ""
+echo "=== Creating test admin user ==="
+echo "Enter credentials for an OpenShell admin user (or Ctrl+C to skip):"
+read -rp "  Username [admin1]: " TEST_USER; TEST_USER="${TEST_USER:-admin1}"
+read -rp "  Email [admin1@example.com]: " TEST_EMAIL; TEST_EMAIL="${TEST_EMAIL:-admin1@example.com}"
+read -rsp "  Password: " TEST_PASS; echo ""
+
+if [[ -n "$TEST_PASS" ]]; then
+  CREATE_CODE=$(curl -sk -X POST "$KC_HOST/admin/realms/$KC_REALM/users" \
+    -H "$AUTH" -H "Content-Type: application/json" \
+    -d "{\"username\":\"$TEST_USER\",\"firstName\":\"Admin\",\"lastName\":\"User\",\"email\":\"$TEST_EMAIL\",\"enabled\":true,\"emailVerified\":true,\"credentials\":[{\"type\":\"password\",\"value\":\"$TEST_PASS\",\"temporary\":false}]}" \
+    -o /dev/null -w "%{http_code}")
+  if [[ "$CREATE_CODE" == "201" || "$CREATE_CODE" == "409" ]]; then
+    echo "  User $TEST_USER: $([[ "$CREATE_CODE" == "201" ]] && echo "created" || echo "already exists")"
+    # Add to administrators-a group
+    USER_ID=$(curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/users?username=$TEST_USER&exact=true" | \
+      python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
+    ADMINS_GROUP=$(curl -sk -H "$AUTH" "$KC_HOST/admin/realms/$KC_REALM/groups?search=administrators-a&exact=true" | \
+      python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
+    curl -sk -X PUT "$KC_HOST/admin/realms/$KC_REALM/users/$USER_ID/groups/$ADMINS_GROUP" \
+      -H "$AUTH" -o /dev/null -w "  Added to administrators-a: %{http_code}\n"
+  else
+    echo "  Failed to create user (HTTP $CREATE_CODE)"
+  fi
+fi
+
 echo ""
 echo "=========================================="
 echo "Keycloak clients created successfully."

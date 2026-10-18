@@ -69,6 +69,27 @@ pkiInitJob:
   serverIpAddresses:
     - "127.0.0.1"
 
+# --- Image pull secrets for mirror registry (disconnected) ---
+# If your mirror registry requires authentication, create a pull secret first:
+#   oc -n openshell-0-1-3 create secret docker-registry mirror-pull-secret \
+#     --docker-server=PLACEHOLDER_REGISTRY \
+#     --docker-username=YOUR_USER \
+#     --docker-password=YOUR_PASS
+# Then uncomment the lines below:
+# server:
+#   sandboxImagePullSecrets:
+#     - name: mirror-pull-secret
+# imagePullSecrets:
+#   - name: mirror-pull-secret
+
+# --- Keycloak private CA (uncomment if Keycloak uses a private/self-signed cert) ---
+# If the Keycloak issuer uses a non-public CA (e.g. internal cert-manager, self-signed),
+# create a ConfigMap with the CA cert:
+#   oc -n openshell-0-1-3 create configmap keycloak-ca --from-file=ca.crt=/path/to/ca.crt
+# Then uncomment:
+#   oidc:
+#     caConfigMapName: "keycloak-ca"
+
 # --- RBAC ---
 rbac:
   create: true

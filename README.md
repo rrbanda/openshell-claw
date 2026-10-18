@@ -596,6 +596,9 @@ openshell sandbox exec --tty openclaw-native -- openclaw-start   # Launch TUI
 | 10 | Agent Sandbox images need Red Hat login | `podman login registry.redhat.io` before pulling |
 | 11 | Gateway and Dashboard need DIFFERENT `PLACEHOLDER_REGISTRY` values | Gateway: `mirror/nvidia`, Dashboard: `mirror` (no suffix). See table in values.yaml |
 | 12 | Gateway OIDC values must match Keycloak exactly | `audience` = API client ID, `rolesClaim` = `resource_access.{API_CLIENT}.roles`, `adminRole`/`userRole` = client role names. See `02-keycloak/README.md` matching table |
+| 13 | Mirror registry needs auth but pods can't pull | Create an imagePullSecret and uncomment `sandboxImagePullSecrets` in gateway values. See `01-gateway/values.yaml` comments |
+| 14 | Keycloak uses private/self-signed CA | Create `keycloak-ca` ConfigMap and uncomment `oidc.caConfigMapName` in gateway values |
+| 15 | Changed the namespace from `openshell-0-1-3` | Update it in ALL files: namespace.yaml, scc-rbac.yaml, values, install/verify scripts, dashboard values, reconnect script (16 places total) |
 
 ---
 
