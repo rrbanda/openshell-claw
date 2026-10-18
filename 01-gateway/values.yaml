@@ -100,6 +100,21 @@ rbac:
 networkPolicy:
   enabled: true
 
+# --- OpenShift Route (optional, enables direct CLI access without port-forward) ---
+# Uncomment and set the hostname to expose the gateway via an OpenShift Route.
+# The Route uses TLS passthrough -- the gateway terminates mTLS directly.
+# The hostname must be added to pkiInitJob.serverDnsNames above if using
+# the built-in PKI, or be covered by a cert-manager certificate SAN.
+#
+# openshiftRoute:
+#   enabled: true
+#   host: "PLACEHOLDER_GATEWAY_HOST"
+#
+# If you enable the Route, also add the hostname to the server cert SANs:
+# pkiInitJob:
+#   serverDnsNames:
+#     - "PLACEHOLDER_GATEWAY_HOST"
+
 # --- Default sandbox base image (REQUIRED for disconnected) ---
 # The dashboard UI "Create Sandbox" form defaults to empty image field.
 # When a user creates a sandbox without specifying an image, the gateway
