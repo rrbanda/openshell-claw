@@ -46,6 +46,9 @@ oidc:
   existingSecret: openshell-dashboard-oidc
   codeChallengeMethod: S256
   redirectURL: "https://PLACEHOLDER_DASH_HOST/oauth2/callback"
+  # adminRole MUST match the gateway's adminRole exactly.
+  # Without this, the dashboard UI hides admin features (Create Workspace, etc.)
+  adminRole: "PLACEHOLDER_ADMIN_ROLE"
   allowedRoles:
     - "PLACEHOLDER_API_CLIENT:users-a"
     - "PLACEHOLDER_API_CLIENT:administrators-a"
