@@ -481,30 +481,76 @@ oc -n openshell-0-1-3 logs deployment/openshell-dashboard -c dashboard --tail=10
 
 ---
 
-## Phase 5: Deploy OpenClaw
+## Phase 5: Connect CLI and Deploy OpenClaw
 
-Choose **one** of two CLI access methods:
+Choose **one** CLI access method based on your environment:
 
-### Option A: Route + OIDC (recommended -- no port-forward needed)
+| Environment | Use | Why |
+|---|---|---|
+| **Disconnected / bastion / no browser** | **Option A: Port-forward + mTLS** | No browser needed, no OIDC, works everywhere |
+| **Laptop with browser + Keycloak access** | Option B: Route + OIDC | No port-forward needed, production-grade |
 
-Requires the gateway Route to be enabled (see `01-gateway/values.yaml` comments).
+### Option A: Port-forward + mTLS (works on disconnected clusters)
 
-**Script path:**
+No browser, no OIDC, no Keycloak needed for the CLI. Just `oc` access.
+
+**Quick copy-paste version (run these in order):**
+
 ```bash
-# After enabling the Route and helm upgrade:
+# --- In Terminal 1: keep this running ---
+oc -n openshell-0-1-3 port-forward svc/openshell-0-1-3 18083:8080
+```
+
+```bash
+# --- In Terminal 2: run all of this ---
+
+# Extract mTLS certs
+GATEWAY_NAME=my-gateway
+TLS_DIR="$HOME/.config/openshell/gateways/$GATEWAY_NAME/mtls"
+mkdir -p "$TLS_DIR" && chmod 700 "$TLS_DIR"
+
+WORK_DIR=$(mktemp -d)
+oc -n openshell-0-1-3 get secret openshell-client-tls -o jsonpath='{.data.ca\.crt}' | base64 -d > "$WORK_DIR/ca.crt"
+oc -n openshell-0-1-3 get secret openshell-client-tls -o jsonpath='{.data.tls\.crt}' | base64 -d > "$WORK_DIR/tls.crt"
+oc -n openshell-0-1-3 get secret openshell-client-tls -o jsonpath='{.data.tls\.key}' | base64 -d > "$WORK_DIR/tls.key"
+
+openssl verify -CAfile "$WORK_DIR/ca.crt" "$WORK_DIR/tls.crt"
+# Expected: tls.crt: OK
+
+install -m 600 "$WORK_DIR/ca.crt" "$TLS_DIR/ca.crt"
+install -m 600 "$WORK_DIR/tls.crt" "$TLS_DIR/tls.crt"
+install -m 600 "$WORK_DIR/tls.key" "$TLS_DIR/tls.key"
+rm -rf "$WORK_DIR"
+
+# Register gateway
+openshell gateway add https://127.0.0.1:18083 --local --name "$GATEWAY_NAME"
+
+# Verify
+export OPENSHELL_GATEWAY=$GATEWAY_NAME
+openshell status
+# Expected: Connected, Authenticated (mTLS transport), Version: 0.1.3
+```
+
+Then continue to **"Create workspace and deploy OpenClaw"** below.
+
+### Option B: Route + OIDC (requires browser)
+
+Requires the gateway Route to be enabled (see `01-gateway/values.yaml`).
+Only works when the CLI machine has a browser that can reach Keycloak.
+
+```bash
 GATEWAY_HOST=openshell-gateway.apps.example.com
 KC_ISSUER=https://keycloak.example.com/realms/openshift
 
-# Register gateway via Route with OIDC
+# Register gateway via Route with OIDC (opens browser for login)
 openshell gateway add "https://$GATEWAY_HOST" \
   --name my-gateway \
   --oidc-issuer "$KC_ISSUER" \
   --oidc-client-id openshell-cli-013 \
   --oidc-audience openshell-api-013 \
   --oidc-scopes "openid profile email"
-# Browser opens for Keycloak login
 
-# CRITICAL: Copy the CA cert (gateway uses self-signed cert)
+# Copy the CA cert (required -- gateway uses self-signed cert)
 mkdir -p ~/.config/openshell/gateways/my-gateway/mtls
 oc -n openshell-0-1-3 get secret openshell-client-tls \
   -o jsonpath='{.data.ca\.crt}' | base64 -d \
@@ -516,11 +562,11 @@ openshell status
 # Expected: Connected, Authenticated (OIDC), Version: 0.1.3
 ```
 
-Then skip to "Create workspace and deploy OpenClaw" below.
+Then continue to **"Create workspace and deploy OpenClaw"** below.
 
-### Option B: Port-forward + mTLS (simpler setup, requires oc access)
+### Create workspace and deploy OpenClaw
 
-**Script path:**
+**Script path (works with either Option A or B):**
 ```bash
 cd 04-openclaw
 export OPENSHELL_GATEWAY=my-gateway
@@ -531,48 +577,7 @@ export WORKSPACE_NAME=openclaw-test
 ./launch-tui.sh
 ```
 
-**Manual steps (Option B -- port-forward + mTLS):**
-
-```bash
-# Step 1: Start port-forward (keep this running in a separate terminal)
-oc -n openshell-0-1-3 port-forward svc/openshell-0-1-3 18083:8080
-
-# Step 2: Extract mTLS certificates
-NAMESPACE=openshell-0-1-3
-GATEWAY_NAME=my-gateway
-TLS_DIR="$HOME/.config/openshell/gateways/$GATEWAY_NAME/mtls"
-
-mkdir -p "$TLS_DIR"
-chmod 700 "$TLS_DIR"
-
-WORK_DIR=$(mktemp -d)
-
-# Note: on macOS use base64 -D, on Linux use base64 -d
-oc -n "$NAMESPACE" get secret openshell-client-tls -o jsonpath='{.data.ca\.crt}' | base64 -d > "$WORK_DIR/ca.crt"
-oc -n "$NAMESPACE" get secret openshell-client-tls -o jsonpath='{.data.tls\.crt}' | base64 -d > "$WORK_DIR/tls.crt"
-oc -n "$NAMESPACE" get secret openshell-client-tls -o jsonpath='{.data.tls\.key}' | base64 -d > "$WORK_DIR/tls.key"
-
-# Step 3: Verify the certificate chain
-openssl verify -CAfile "$WORK_DIR/ca.crt" "$WORK_DIR/tls.crt"
-# Expected: tls.crt: OK
-
-# Step 4: Install certs to the config directory
-install -m 600 "$WORK_DIR/ca.crt" "$TLS_DIR/ca.crt"
-install -m 600 "$WORK_DIR/tls.crt" "$TLS_DIR/tls.crt"
-install -m 600 "$WORK_DIR/tls.key" "$TLS_DIR/tls.key"
-rm -rf "$WORK_DIR"
-
-# Step 5: Register the gateway
-openshell gateway add https://127.0.0.1:18083 --local --name "$GATEWAY_NAME"
-
-# Step 6: Verify connection
-export OPENSHELL_GATEWAY=$GATEWAY_NAME
-openshell status
-# Expected: Status: Connected, Authentication: Authenticated (mTLS transport), Version: 0.1.3
-
-# Step 7: Create the workspace
-export OPENSHELL_WORKSPACE=openclaw-test
-OPENSHELL_WORKSPACE=default openshell workspace create --name openclaw-test
+**Manual steps (create workspace and sandbox):**
 
 # Step 8: Verify workspace
 openshell workspace list
