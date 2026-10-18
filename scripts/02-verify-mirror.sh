@@ -20,8 +20,11 @@ echo "======================================"
 
 PASS=0
 FAIL=0
-while IFS= read -r image; do
-  [[ -z "$image" || "$image" == \#* ]] && continue
+while IFS= read -r line; do
+  [[ -z "$line" || "$line" == \#* ]] && continue
+  [[ "$line" != podman\ pull\ * ]] && continue
+
+  image="${line#podman pull }"
 
   dest_path="${image#*/}"
   dest_path="${dest_path//@sha256:/:sha256-}"

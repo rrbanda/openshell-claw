@@ -25,8 +25,13 @@ echo "Mirroring images from images.txt to $MIRROR_REGISTRY"
 echo "======================================================"
 
 FAILED=0
-while IFS= read -r image; do
-  [[ -z "$image" || "$image" == \#* ]] && continue
+while IFS= read -r line; do
+  # Skip empty lines, comments, and non-podman lines
+  [[ -z "$line" || "$line" == \#* ]] && continue
+  [[ "$line" != podman\ pull\ * ]] && continue
+
+  # Extract the image reference after "podman pull "
+  image="${line#podman pull }"
 
   # Derive the destination path: strip the source registry, keep repo + tag
   dest_path="${image#*/}"

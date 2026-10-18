@@ -1,9 +1,83 @@
-ghcr.io/nvidia/openshell/gateway:0.1.3
-ghcr.io/nvidia/openshell/supervisor:0.1.3
-ghcr.io/nvidia/openshell/sandbox:0.1.3
-nvcr.io/nvidia/base/ubuntu:24.04
-quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441
-quay.io/gkrumbach07/openshell-dashboard:0.1.1
-quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
-registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
-registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3
+# OpenShell 0.1.3 + Dashboard 0.1.1 + OpenClaw — Complete Image List
+#
+# All images required for a disconnected deployment.
+# Each entry shows: tag, digest, purpose, and the podman pull command.
+#
+# To pull all images on a connected machine:
+#   grep '^podman' images.txt | bash
+#
+# To mirror to a disconnected registry, use scripts/01-mirror-images.sh
+# or pull manually below and then podman push to your mirror.
+
+# ============================================================================
+# 1. OpenShell Gateway
+#    Used by: gateway pod + certgen pre-install hook job
+# ============================================================================
+# Tag:    ghcr.io/nvidia/openshell/gateway:0.1.3
+# Digest: ghcr.io/nvidia/openshell/gateway@sha256:7fb31ce604ce5fef58f481fda815f7ed710a9ca18d1262b700bd63114607fb60
+podman pull ghcr.io/nvidia/openshell/gateway:0.1.3
+
+# ============================================================================
+# 2. OpenShell Supervisor
+#    Used by: init container injected by gateway into every sandbox pod
+# ============================================================================
+# Tag:    ghcr.io/nvidia/openshell/supervisor:0.1.3
+# Digest: (resolved at runtime by gateway)
+podman pull ghcr.io/nvidia/openshell/supervisor:0.1.3
+
+# ============================================================================
+# 3. OpenShell Sandbox Runtime
+#    Used by: workload-side TLS boundary in sandbox pods
+# ============================================================================
+# Tag:    ghcr.io/nvidia/openshell/sandbox:0.1.3
+# Digest: ghcr.io/nvidia/openshell/sandbox@sha256:2658534bfb3f1ebba4bb7792e9e875a0972edbe7ae5f58d807ae22c46844a2ac
+podman pull ghcr.io/nvidia/openshell/sandbox:0.1.3
+
+# ============================================================================
+# 4. Default Sandbox Base Image
+#    Used by: gateway default_image for standalone sandboxes (not OpenClaw)
+# ============================================================================
+# Tag:    nvcr.io/nvidia/base/ubuntu:24.04
+# Digest: (varies by platform)
+podman pull nvcr.io/nvidia/base/ubuntu:24.04
+
+# ============================================================================
+# 5. OpenClaw Application Image
+#    Used by: the OpenClaw sandbox (AI coding assistant TUI)
+#    Multi-arch manifest (linux/amd64 + linux/arm64)
+# ============================================================================
+# Tag:    quay.io/opendatahub/odh-openshell-sandbox-openclaw (odh-stable tag)
+# Digest: quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441
+podman pull quay.io/opendatahub/odh-openshell-sandbox-openclaw@sha256:b977255e7ee9a8e3cea95bc8ba3ad08a93c5e9ad335984e2db1282b80eb82441
+
+# ============================================================================
+# 6. OpenShell Dashboard
+#    Used by: dashboard BFF + React UI container
+# ============================================================================
+# Tag:    quay.io/gkrumbach07/openshell-dashboard:0.1.1
+# Digest: quay.io/gkrumbach07/openshell-dashboard@sha256:7118fca976b75f6f3de196785ed4f689a089ccd898ac283e595f712d5bd2f176
+podman pull quay.io/gkrumbach07/openshell-dashboard:0.1.1
+
+# ============================================================================
+# 7. oauth2-proxy
+#    Used by: dashboard sidecar for Keycloak OIDC login
+# ============================================================================
+# Tag:    quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
+# Digest: quay.io/oauth2-proxy/oauth2-proxy@sha256:7c25fd50e1998798b79d051bd7d98ebac8dc4c6c1e54c99f4cb06f3e7d117dbd
+podman pull quay.io/oauth2-proxy/oauth2-proxy:v7.15.2
+
+# ============================================================================
+# 8. Agent Sandbox Controller
+#    Used by: agent-sandbox-system namespace (Kubernetes CRD controller)
+#    NOTE: registry.redhat.io requires authentication (Red Hat subscription)
+# ============================================================================
+# Digest: registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
+podman pull registry.redhat.io/agent-sandbox/agent-sandbox-rhel9-operator@sha256:554102df4c721bd27be7129c910c206ed1329be14df68906a588959b0e7d9309
+
+# ============================================================================
+# 9. Agent Sandbox Router
+#    Used by: agent-sandbox-system namespace (sandbox network routing)
+#    NOTE: registry.redhat.io requires authentication (Red Hat subscription)
+# ============================================================================
+# Digest: registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3
+podman pull registry.redhat.io/agent-sandbox/agent-sandbox-router@sha256:d7d745b9ad8143282a1356d13a9b351faf6aa1955ee6b02f100fc282dbbd91d3
