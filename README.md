@@ -13,6 +13,7 @@ Every phase has **two paths**: run the script, or run the individual commands on
 | OpenClaw | 2026.9.5 | Terminal-based AI coding assistant running inside a sandbox |
 | Agent Sandbox | v0.5.0 | Kubernetes CRD controller for sandbox pods |
 | Keycloak OIDC | — | Authentication with role-based access control |
+| ExploitIQ Agent | latest | LLM-powered CVE vulnerability analysis (Phase 6) |
 
 ## Prerequisites
 
@@ -698,8 +699,15 @@ scripts/                    Image mirroring and verification
 03-dashboard/               Dashboard OIDC secret, Helm values, install/verify
 04-openclaw/                Provider profile, workspace/sandbox creation, model test
 05-reconnect/               Reconnection script for later sessions
+06-exploit-iq/              ExploitIQ CVE agent: images, Kustomize deploy, OpenShell sandbox + policy
 images.txt                  All 9 images with digests and podman pull commands
 ```
+
+## Phase 6: Deploy ExploitIQ Agent
+
+After completing Phases 0–5, you can deploy the ExploitIQ CVE vulnerability analysis agent inside an OpenShell sandbox. The agent uses in-cluster LLM inference, disconnected OpenShell policies, and the Kustomize disconnected overlay for platform services.
+
+See [`06-exploit-iq/README.md`](06-exploit-iq/README.md) for the full step-by-step guide.
 
 ## Versions Tested
 
@@ -713,6 +721,9 @@ images.txt                  All 9 images with digests and podman pull commands
 | OpenClaw | 2026.9.5 |
 | Keycloak | 26.x |
 | oauth2-proxy | v7.15.2 |
+| ExploitIQ Agent | latest |
+| ExploitIQ Client | latest |
+| nginx-cache (NGINX) | 1.30.3 |
 
 ## License
 
