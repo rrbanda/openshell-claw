@@ -5,25 +5,21 @@
 #   PLACEHOLDER_REGISTRY      -> your mirror registry WITH the nvidia prefix
 #                                Example: registry.example.com:5000/nvidia
 #                                The chart appends /openshell/gateway, /openshell/supervisor, etc.
-#                                So the full image becomes: registry.example.com:5000/nvidia/openshell/gateway:0.1.3
 #
-#                                IMPORTANT: The gateway and dashboard charts need DIFFERENT registry values:
-#                                | Chart     | PLACEHOLDER_REGISTRY value        | Why                            |
-#                                |-----------|-----------------------------------|--------------------------------|
-#                                | Gateway   | registry.example.com:5000/nvidia  | repos are openshell/*          |
-#                                | Dashboard | registry.example.com:5000         | repos are gkrumbach07/*, etc.  |
+#                                IMPORTANT: Gateway and Dashboard need DIFFERENT registry values:
+#                                | Chart     | Value                             | Why                   |
+#                                |-----------|-----------------------------------|-----------------------|
+#                                | Gateway   | registry.example.com:5000/nvidia  | repos: openshell/*    |
+#                                | Dashboard | registry.example.com:5000         | repos: gkrumbach07/*  |
 #
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
 #   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api-013.roles)
-#   PLACEHOLDER_ADMIN_ROLE    -> Admin role name (e.g. administrators-a)
-#   PLACEHOLDER_USER_ROLE     -> User role name (e.g. users-a)
+#   PLACEHOLDER_GATEWAY_HOST  -> Route hostname (e.g. openshell-gw.apps.cluster.example.com)
 #   PLACEHOLDER_SANDBOX_IMAGE -> Default sandbox base image in your mirror
 #                                Example: registry.example.com:5000/nvidia/base/ubuntu
 
 # --- Image registry override for disconnected ---
-# IMPORTANT: This must include the /nvidia prefix because chart repositories
-# are relative paths like openshell/gateway, openshell/supervisor, etc.
 global:
   image:
     registry: PLACEHOLDER_REGISTRY
@@ -49,11 +45,8 @@ server:
 
   auth:
     # Allow mTLS-only CLI connections without an OIDC token.
-    # Set to true for disconnected/bastion environments where the CLI
-    # cannot open a browser for OIDC login.
-    # Set to false only if ALL CLI users can authenticate via OIDC
-    # (e.g. laptop with browser that can reach Keycloak).
-    # The dashboard always authenticates via oauth2-proxy regardless.
+    # true  = disconnected/bastion (no browser for OIDC login)
+    # false = all CLI users can authenticate via OIDC (laptop with browser)
     allowUnauthenticatedUsers: true
 
   tls:
@@ -66,40 +59,27 @@ server:
     issuer: "PLACEHOLDER_KC_ISSUER"
     audience: "PLACEHOLDER_KC_AUDIENCE"
     rolesClaim: "PLACEHOLDER_KC_ROLESCLAIM"
-    # Roles left empty = authentication-only mode.
-    # mTLS CLI users get full access without OIDC tokens.
-    # OIDC dashboard users also get full access (identity still tracked).
-    # To enforce roles, set these AND set allowUnauthenticatedUsers=false,
-    # but then CLI must use OIDC (requires browser).
+    # Roles empty = authentication-only mode (no role enforcement).
+    # Required when allowUnauthenticatedUsers=true, because mTLS CLI
+    # users have no OIDC roles. The dashboard UI uses its own adminRole
+    # setting (in 03-dashboard/values.yaml) separately.
     adminRole: ""
     userRole: ""
 
-# --- PKI bootstrap ---
+# --- PKI bootstrap + Route ---
+# serverDnsNames MUST include the Route hostname for TLS to work.
 pkiInitJob:
   enabled: true
   serverIpAddresses:
     - "127.0.0.1"
+  serverDnsNames:
+    - "PLACEHOLDER_GATEWAY_HOST"
 
-# --- Image pull secrets for mirror registry (disconnected) ---
-# If your mirror registry requires authentication, create a pull secret first:
-#   oc -n openshell-0-1-3 create secret docker-registry mirror-pull-secret \
-#     --docker-server=PLACEHOLDER_REGISTRY \
-#     --docker-username=YOUR_USER \
-#     --docker-password=YOUR_PASS
-# Then uncomment the lines below:
-# server:
-#   sandboxImagePullSecrets:
-#     - name: mirror-pull-secret
-# imagePullSecrets:
-#   - name: mirror-pull-secret
-
-# --- Keycloak private CA (uncomment if Keycloak uses a private/self-signed cert) ---
-# If the Keycloak issuer uses a non-public CA (e.g. internal cert-manager, self-signed),
-# create a ConfigMap with the CA cert:
-#   oc -n openshell-0-1-3 create configmap keycloak-ca --from-file=ca.crt=/path/to/ca.crt
-# Then uncomment:
-#   oidc:
-#     caConfigMapName: "keycloak-ca"
+# --- OpenShift Route ---
+# TLS passthrough. Comment out if using port-forward instead.
+openshiftRoute:
+  enabled: true
+  host: "PLACEHOLDER_GATEWAY_HOST"
 
 # --- RBAC ---
 rbac:
@@ -111,43 +91,22 @@ rbac:
 networkPolicy:
   enabled: true
 
-# --- OpenShift Route (creates a Route for direct CLI + OIDC access) ---
-# TLS passthrough -- the gateway terminates mTLS directly.
-# Replace PLACEHOLDER_GATEWAY_HOST with your Route hostname.
-# If you do NOT want a Route (using port-forward instead), comment these out.
-openshiftRoute:
-  enabled: true
-  host: "PLACEHOLDER_GATEWAY_HOST"
-
-# --- PKI bootstrap ---
-# serverDnsNames MUST include the Route hostname so the server cert covers it.
-pkiInitJob:
-  enabled: true
-  serverIpAddresses:
-    - "127.0.0.1"
-  serverDnsNames:
-    - "PLACEHOLDER_GATEWAY_HOST"
-
-# After deploying, register the CLI via Route + OIDC:
-#   openshell gateway add https://PLACEHOLDER_GATEWAY_HOST \
-#     --name my-gateway \
-#     --oidc-issuer PLACEHOLDER_KC_ISSUER \
-#     --oidc-client-id openshell-cli-GATEWAY_NAME \
-#     --oidc-audience PLACEHOLDER_KC_AUDIENCE \
-#     --oidc-scopes "openid profile email"
-#
-# Then copy the CA cert (self-signed CA):
-#   mkdir -p ~/.config/openshell/gateways/my-gateway/mtls
-#   oc -n openshell-0-1-3 get secret openshell-client-tls \
-#     -o jsonpath='{.data.ca\.crt}' | base64 -d \
-#     > ~/.config/openshell/gateways/my-gateway/mtls/ca.crt
-
 # --- Default sandbox base image (REQUIRED for disconnected) ---
-# The dashboard UI "Create Sandbox" form defaults to empty image field.
-# When a user creates a sandbox without specifying an image, the gateway
-# pulls this default image. Without it mirrored, those sandboxes fail.
-# Chart default: nvcr.io/nvidia/base/ubuntu:24.04
+# Dashboard "Create Sandbox" with empty image field pulls this.
 sandbox:
   image:
     repository: PLACEHOLDER_SANDBOX_IMAGE
     tag: "24.04"
+
+# --- Optional: Image pull secrets (uncomment if mirror needs auth) ---
+# oc -n openshell-0-1-3 create secret docker-registry mirror-pull-secret \
+#   --docker-server=YOUR_REGISTRY --docker-username=USER --docker-password=PASS
+# server:
+#   sandboxImagePullSecrets:
+#     - name: mirror-pull-secret
+
+# --- Optional: Keycloak private CA (uncomment if KC uses private cert) ---
+# oc -n openshell-0-1-3 create configmap keycloak-ca --from-file=ca.crt=/path/to/ca.crt
+# server:
+#   oidc:
+#     caConfigMapName: "keycloak-ca"

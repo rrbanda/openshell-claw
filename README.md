@@ -229,19 +229,16 @@ oc auth can-i use scc/privileged --as=system:serviceaccount:openshell-0-1-3:open
 # Replace ALL of these PLACEHOLDERs:
 #   PLACEHOLDER_REGISTRY      -> your mirror registry WITH nvidia prefix
 #                                Example: registry.example.com:5000/nvidia
-#                                (chart appends /openshell/gateway etc.)
 #
 #   IMPORTANT: Gateway and Dashboard need DIFFERENT registry values:
 #     Gateway values:   registry.example.com:5000/nvidia   (repos: openshell/*)
 #     Dashboard values: registry.example.com:5000          (repos: gkrumbach07/*, oauth2-proxy/*)
 #
-#   PLACEHOLDER_SANDBOX_IMAGE -> default sandbox base image in your mirror
-#                                Example: registry.example.com:5000/nvidia/base/ubuntu
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
 #   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api-013.roles)
-#   PLACEHOLDER_ADMIN_ROLE    -> Admin role name (e.g. administrators-a)
-#   PLACEHOLDER_USER_ROLE     -> User role name (e.g. users-a)
+#   PLACEHOLDER_GATEWAY_HOST  -> Route hostname (e.g. openshell-gw.apps.cluster.example.com)
+#   PLACEHOLDER_SANDBOX_IMAGE -> Mirror path for ubuntu (e.g. registry.example.com:5000/nvidia/base/ubuntu)
 
 # Step 6: Install the gateway from the local chart
 # NOTE: Run this from the REPO ROOT directory (where charts/ is)

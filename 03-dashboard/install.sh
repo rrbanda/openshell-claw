@@ -16,9 +16,9 @@ VALUES_FILE="$SCRIPT_DIR/values.yaml"
 NAMESPACE="openshell-0-1-3"
 RELEASE_NAME="openshell-dashboard"
 
-if grep -q 'PLACEHOLDER' "$VALUES_FILE"; then
+if grep -v '^\s*#' "$VALUES_FILE" | grep -q 'PLACEHOLDER'; then
   echo "ERROR: values.yaml still contains PLACEHOLDER values."
-  grep 'PLACEHOLDER' "$VALUES_FILE"
+  grep -v '^\s*#' "$VALUES_FILE" | grep 'PLACEHOLDER'
   exit 1
 fi
 
