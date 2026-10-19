@@ -15,6 +15,8 @@
 #   PLACEHOLDER_KC_ISSUER     -> Keycloak issuer URL (e.g. https://sso.example.com/realms/openshell)
 #   PLACEHOLDER_KC_AUDIENCE   -> Keycloak API client ID (e.g. openshell-api-013)
 #   PLACEHOLDER_KC_ROLESCLAIM -> Roles claim path (e.g. resource_access.openshell-api-013.roles)
+#   PLACEHOLDER_ADMIN_ROLE    -> Admin role name from Keycloak (e.g. administrators-a)
+#   PLACEHOLDER_USER_ROLE     -> User role name from Keycloak (e.g. users-a)
 #   PLACEHOLDER_GATEWAY_HOST  -> Route hostname (e.g. openshell-gw.apps.cluster.example.com)
 #   PLACEHOLDER_SANDBOX_IMAGE -> Default sandbox base image in your mirror
 #                                Example: registry.example.com:5000/nvidia/base/ubuntu
@@ -59,12 +61,13 @@ server:
     issuer: "PLACEHOLDER_KC_ISSUER"
     audience: "PLACEHOLDER_KC_AUDIENCE"
     rolesClaim: "PLACEHOLDER_KC_ROLESCLAIM"
-    # Roles empty = authentication-only mode (no role enforcement).
-    # Required when allowUnauthenticatedUsers=true, because mTLS CLI
-    # users have no OIDC roles. The dashboard UI uses its own adminRole
-    # setting (in 03-dashboard/values.yaml) separately.
-    adminRole: ""
-    userRole: ""
+    # Roles MUST be set to match Keycloak client role names.
+    # The gateway defaults to 'openshell-admin'/'openshell-user' if empty,
+    # which won't match your Keycloak roles.
+    # allowUnauthenticatedUsers=true lets mTLS CLI bypass role checks,
+    # while OIDC dashboard users get their roles validated.
+    adminRole: "PLACEHOLDER_ADMIN_ROLE"
+    userRole: "PLACEHOLDER_USER_ROLE"
 
 # --- PKI bootstrap + Route ---
 # serverDnsNames MUST include the Route hostname for TLS to work.
