@@ -18,6 +18,10 @@
 #   PLACEHOLDER_ADMIN_ROLE    -> Admin role name from Keycloak (e.g. administrators-a)
 #   PLACEHOLDER_USER_ROLE     -> User role name from Keycloak (e.g. users-a)
 #   PLACEHOLDER_GATEWAY_HOST  -> Route hostname (e.g. openshell-gw.apps.cluster.example.com)
+#   PLACEHOLDER_SERVICES_DOMAIN -> Wildcard subdomain for sandbox services
+#                                  Example: openshell-svc.apps.cluster.example.com
+#                                  Enables: https://<sandbox>--<workspace>--<service>.openshell-svc.apps.../
+#                                  Requires: WildcardsAllowed on the ingress controller (see prerequisites)
 #   PLACEHOLDER_SANDBOX_IMAGE -> Default sandbox base image in your mirror
 #                                Example: registry.example.com:5000/nvidia/base/ubuntu
 
@@ -77,6 +81,7 @@ pkiInitJob:
     - "127.0.0.1"
   serverDnsNames:
     - "PLACEHOLDER_GATEWAY_HOST"
+    - "*.PLACEHOLDER_SERVICES_DOMAIN"
 
 # --- OpenShift Route ---
 # TLS passthrough. Comment out if using port-forward instead.

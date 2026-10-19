@@ -683,6 +683,11 @@ openshell sandbox exec --tty openclaw-native -- openclaw-start   # Launch TUI
 | 16 | Sandbox pods denied by SCC in managed workspace namespace | After creating each workspace, bind SCC in the new namespace. `create-workspace.sh` does this automatically. Manual: `oc adm policy add-scc-to-user privileged -z openshell-0-1-3-sandbox -n <managed-ns>` |
 | 17 | CLI via Route gets `UnknownIssuer` error | Copy the gateway CA cert: `oc get secret openshell-client-tls -o jsonpath='{.data.ca\.crt}' \| base64 -d > ~/.config/openshell/gateways/<name>/mtls/ca.crt`. Required because the gateway uses a self-signed CA |
 | 18 | Enabling Route requires cert regeneration | Delete TLS secrets before `helm upgrade` so certgen creates new certs with the Route hostname SAN. See `01-gateway/values.yaml` Route section |
+| 19 | UBI9 Python images need `/opt` in policy | Without `/opt` in `read_only`, Python fails with `PermissionError: pyvenv.cfg`. Applies to ALL UBI9 Python sandbox images |
+| 20 | Sandbox service exposure needs wildcard Route | Include `*.PLACEHOLDER_SERVICES_DOMAIN` in `pkiInitJob.serverDnsNames`, create a wildcard Route, and enable `WildcardsAllowed` on the ingress controller |
+| 21 | ExploitIQ needs tiktoken endpoint | `openaipublic.blob.core.windows.net:443` must be in the network policy or `nat` crashes on startup |
+| 22 | ExploitIQ config path | Use `/workspace/src/vuln_analysis/configs/config-http-openai.yml` (in-image), NOT `/configs/exploit-iq-config.yml` (Kustomize ConfigMap mount) |
+| 23 | Wildcard Routes need cluster setting | Run once: `oc patch ingresscontroller default -n openshift-ingress-operator --type merge -p '{"spec":{"routeAdmission":{"wildcardPolicy":"WildcardsAllowed"}}}'` |
 
 ---
 
